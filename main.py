@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 import json
 from datetime import datetime
 import os
+import feedparser
 
 # ==================== 配置部分 ====================
 # AI大模型配置
@@ -62,6 +63,55 @@ def fetch_github_trending():
                         })
     except Exception as e:
         print(f"GitHub Trending抓取失败: {e}")
+    return news
+
+def fetch_rss_feeds():
+    """抓取RSS订阅源的新闻"""
+    news = []
+    
+    # RSS订阅源配置
+    rss_sources = [
+        {
+            'name': '36氪',
+            'url': 'https://36kr.com/feed',
+            'keywords': ['AI', '人工智能', '大模型', '机器学习', '深度学习']
+        },
+        {
+            'name': '机器之心',
+            'url': 'https://www.jiqizhixin.com/rss',
+            'keywords': ['AI', '人工智能', '大模型', '机器学习']
+        },
+        {
+            'name': '量子位',
+            'url': 'https://www.qbitai.com/feed',
+            'keywords': ['AI', '人工智能', '大模型']
+        }
+    ]
+    
+    for source in rss_sources:
+        try:
+            print(f"正在抓取 {source['name']} RSS...")
+            feed = feedparser.parse(source['url'])
+            
+            for entry in feed.entries[:MAX_NEWS_PER_SOURCE]:
+                title = entry.get('title', '')
+                link = entry.get('link', '')
+                summary = entry.get('summary', '')[:200]  # 限制摘要长度
+                
+                # 检查是否包含AI相关关键词
+                if any(keyword in title or keyword in summary for keyword in source['keywords']):
+                    news.append({
+                        'title': title,
+                        'url': link,
+                        'summary': summary,
+                        'source': source['name']
+                    })
+                    
+            print(f"{source['name']}: 抓取到 {len([n for n in news if n['source'] == source['name']])} 条AI相关新闻")
+            
+        except Exception as e:
+            print(f"{source['name']} RSS抓取失败: {e}")
+    
     return news
 
 def fetch_36kr():
@@ -178,15 +228,24 @@ def fetch_all_news():
     
     news = []
     
-    # 抓取36氪
-    kr_news = fetch_36kr()
-    print(f"36氪: {len(kr_news)} 条")
-    news.extend(kr_news)
+    # 优先使用RSS订阅源抓取
+    print("正在从RSS订阅源抓取新闻...")
+    rss_news = fetch_rss_feeds()
+    print(f"RSS订阅源: {len(rss_news)} 条")
+    news.extend(rss_news)
     
-    # 抓取人人都是产品经理
-    woshipm_news = fetch_woshipm()
-    print(f"人人都是产品经理: {len(woshipm_news)} 条")
-    news.extend(woshipm_news)
+    # 如果RSS抓取失败或数量不足，尝试网页抓取
+    if len(news) < 3:
+        print("RSS抓取数量不足，尝试网页抓取...")
+        # 抓取36氪
+        kr_news = fetch_36kr()
+        print(f"36氪: {len(kr_news)} 条")
+        news.extend(kr_news)
+        
+        # 抓取人人都是产品经理
+        woshipm_news = fetch_woshipm()
+        print(f"人人都是产品经理: {len(woshipm_news)} 条")
+        news.extend(woshipm_news)
     
     # 去重
     seen_titles = set()
@@ -266,7 +325,7 @@ def summarize_with_ai(news_list):
     # 构建提示词
     news_titles = "\n".join([f"- {item['title']} ({item['source']})\n{item['url']}" for item in news_list])
     
-    prompt = f"请对以下AI相关新闻进行处理：\n\n{news_titles}\n\n处理要求：\n1. 扔掉没用的废稿、广告、重复新闻\n2. 给每条新闻写一句不超过50个字的总结，直击痛点\n3. 把新闻分成这三类：【大模型动态】、【产品与商业化】、【开源工具】\n4. 对于每条新闻，返回格式为：分类|标题|总结|URL\n5. 只返回处理结果，不要有其他多余的文字\n"
+    prompt = f"请对以下AI相关新闻进行处理：\n\n{news_titles}\n\n处理要求：\n1. 扔掉没用的废稿、广告、重复新闻\n2. 给每条新闻写一句不超过50个字的总结，直击痛点\n3. 把新闻分成这三类：【大模型动态】、【产品与商业化】、【开源工具】\n4. 对于每条新闻，返回格式为：分类|标题|总结|URL|来源\n5. 只返回处理结果，不要有其他多余的文字\n"
     
     try:
         headers = {
@@ -291,18 +350,31 @@ def summarize_with_ai(news_list):
         result = response.json()
         content = result['choices'][0]['message']['content']
         
+        print(f"AI返回内容:\n{content}")
+        
         # 解析AI返回的结果
         summarized_news = []
         for line in content.strip().split('\n'):
             if line and '|' in line:
-                parts = line.split('|', 3)
-                if len(parts) == 4:
+                parts = line.split('|', 4)
+                if len(parts) == 5:
+                    category, title, summary, url, source = parts
+                    summarized_news.append({
+                        'category': category.strip(),
+                        'title': title.strip(),
+                        'summary': summary.strip(),
+                        'url': url.strip(),
+                        'source': source.strip()
+                    })
+                elif len(parts) == 4:
+                    # 兼容旧格式（没有来源）
                     category, title, summary, url = parts
                     summarized_news.append({
                         'category': category.strip(),
                         'title': title.strip(),
                         'summary': summary.strip(),
-                        'url': url.strip()
+                        'url': url.strip(),
+                        'source': '未知'
                     })
         
         print(f"AI处理完成，共生成 {len(summarized_news)} 条总结")
@@ -428,12 +500,12 @@ def generate_html(news_list):
         .news-item h3 a:hover {{
             text-decoration: underline;
         }}
-        .news-item .summary {
+        .news-item .summary {{
             font-size: 14px;
             color: #666;
             margin: 0 0 5px 0;
-        }
-        .news-item .source {
+        }}
+        .news-item .source {{
             font-size: 12px;
             color: #999;
             margin: 0;

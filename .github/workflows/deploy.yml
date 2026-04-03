@@ -9,7 +9,7 @@ on:
   # 推送代码时运行
   push:
     branches:
-      - master
+      - main
 
 # 设置权限
 permissions:
