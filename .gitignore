@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 
 # 忽略生成的HTML文件
-AI日报.html
+# AI日报.html
 
 # 忽略环境变量文件
 .env
