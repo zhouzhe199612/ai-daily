@@ -353,6 +353,7 @@ def generate_html(news_list):
         <div class="news-item">
             <h3><a href="{news['url']}" target="_blank">{news['title']}</a></h3>
             <p class="summary">{news['summary']}</p>
+            <p class="source">来源: {news.get('source', '未知')}</p>
         </div>
         """
     
@@ -362,6 +363,7 @@ def generate_html(news_list):
         <div class="news-item">
             <h3><a href="{news['url']}" target="_blank">{news['title']}</a></h3>
             <p class="summary">{news['summary']}</p>
+            <p class="source">来源: {news.get('source', '未知')}</p>
         </div>
         """
     
@@ -371,6 +373,7 @@ def generate_html(news_list):
         <div class="news-item">
             <h3><a href="{news['url']}" target="_blank">{news['title']}</a></h3>
             <p class="summary">{news['summary']}</p>
+            <p class="source">来源: {news.get('source', '未知')}</p>
         </div>
         """
     
@@ -425,9 +428,14 @@ def generate_html(news_list):
         .news-item h3 a:hover {{
             text-decoration: underline;
         }}
-        .news-item .summary {{
+        .news-item .summary {
             font-size: 14px;
             color: #666;
+            margin: 0 0 5px 0;
+        }
+        .news-item .source {
+            font-size: 12px;
+            color: #999;
             margin: 0;
         }}
         .footer {{
