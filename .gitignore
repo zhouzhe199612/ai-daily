@@ -1,0 +1,20 @@
+# 忽略Python编译文件
+__pycache__/
+*.pyc
+
+# 忽略生成的HTML文件
+AI日报.html
+
+# 忽略环境变量文件
+.env
+
+# 忽略日志文件
+*.log
+
+# 忽略编辑器配置文件
+.vscode/
+.idea/
+
+# 忽略其他不需要的文件
+*.tmp
+*.temp
