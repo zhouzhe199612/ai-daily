@@ -4,13 +4,13 @@
 """
 AI资讯日报生成器
 功能：自动抓取AI相关新闻，调用AI大模型总结，生成HTML网页
-版本：v1.0.0
-日期：2026-04-03
+版本：v1.0.1
+日期：2026-04-04
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "AI日报"
-__date__ = "2026-04-03"
+__date__ = "2026-04-04"
 
 import requests
 from bs4 import BeautifulSoup
