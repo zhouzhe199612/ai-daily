@@ -624,8 +624,6 @@ def generate_html(news_list):
         </div>
     </div>
     
-    <h1>AI日报 - {today.strftime('%Y年%m月%d日')}</h1>
-    
     <!-- 大模型动态 -->
     <div class="category">
         <h2>【大模型动态】</h2>
