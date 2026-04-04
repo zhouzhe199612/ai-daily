@@ -66,20 +66,63 @@
             border-top: 1px solid #ddd;
             padding-top: 20px;
         }
+        .nav {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .date-tags {
+            text-align: left;
+        }
+        .date-tags h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .tag {
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 16px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .tag:hover {
+            background-color: #e0e0e0;
+        }
+        .tag.active {
+            background-color: #4169e1;
+            color: white;
+        }
     </style>
 </head>
 <body>
+    <div class="nav">
+        <div class="date-tags">
+            <h3>选择日期</h3>
+            <div class="tags-container">
+                <a href="index.html" class="tag">首页</a>
+                                <a href="AI日报_2026-04-04.html" class="tag active">2026-04-04</a>
+
+            </div>
+        </div>
+    </div>
+    
     <h1>AI日报 - 2026年04月04日</h1>
     
     <!-- 大模型动态 -->
     <div class="category">
         <h2>【大模型动态】</h2>
-        
-        <div class="news-item">
-            <h3><a href="https://www.qbitai.com/2026/04/395477.html" target="_blank">Sora向左，阿里向右：全能演技派模型登场千问APP</a></h3>
-            <p class="summary">阿里通义千问推出“演技派”视频生成模型，可精准控制角色动作表情。</p>
-            <p class="source">来源: 量子位</p>
-        </div>
         
     </div>
     
@@ -88,14 +131,8 @@
         <h2>【产品与商业化】</h2>
         
         <div class="news-item">
-            <h3><a href="https://36kr.com/p/3751046517129735?f=rss" target="_blank">神州数码2025年营收超1400亿，AI相关业务增长近五成｜最前线</a></h3>
-            <p class="summary">神州数码2025年AI业务增长迅猛，相关收入同比大增近50%。</p>
-            <p class="source">来源: 36氪</p>
-        </div>
-        
-        <div class="news-item">
-            <h3><a href="https://www.qbitai.com/2026/04/395316.html" target="_blank">OpenAI收购了一家脱口秀公司</a></h3>
-            <p class="summary">OpenAI收购脱口秀公司，探索AI在创意内容生成与喜剧领域的应用。</p>
+            <h3><a href="https://www.qbitai.com/2026/04/395995.html" target="_blank">价值归零！Django创始人警告：30岁程序员受AI冲击最大</a></h3>
+            <p class="summary">Django创始人警告，AI工具将冲击30岁程序员的职业价值，引发行业焦虑。</p>
             <p class="source">来源: 量子位</p>
         </div>
         
@@ -108,7 +145,7 @@
     </div>
     
     <div class="footer">
-        <p>AI日报自动生成器 © 2026 | 版本 v1.0.0 | 生成时间: 2026-04-04 15:48:24</p>
+        <p>AI日报自动生成器 © 2026 | 版本 v1.0.0 | 生成时间: 2026-04-04 16:20:13</p>
     </div>
 </body>
 </html>

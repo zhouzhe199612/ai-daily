@@ -75,6 +75,12 @@ def fetch_rss_feeds():
     """抓取RSS订阅源的新闻"""
     news = []
     
+    # 获取当天日期（北京时间）
+    from datetime import datetime, timezone, timedelta
+    # 北京时间 UTC+8
+    beijing_tz = timezone(timedelta(hours=8))
+    today = datetime.now(beijing_tz).date()
+    
     # RSS订阅源配置
     rss_sources = [
         {
@@ -104,16 +110,30 @@ def fetch_rss_feeds():
                 link = entry.get('link', '')
                 summary = entry.get('summary', '')[:200]  # 限制摘要长度
                 
+                # 获取发布日期
+                pub_date = None
+                if 'published_parsed' in entry:
+                    from datetime import datetime
+                    pub_date = datetime(*entry.published_parsed[:6])
+                    # 转换为北京时间
+                    pub_date = pub_date.replace(tzinfo=timezone.utc).astimezone(beijing_tz)
+                    pub_date = pub_date.date()
+                
+                # 检查是否是当天的新闻
+                if pub_date != today:
+                    continue
+                
                 # 检查是否包含AI相关关键词
                 if any(keyword in title or keyword in summary for keyword in source['keywords']):
                     news.append({
                         'title': title,
                         'url': link,
                         'summary': summary,
-                        'source': source['name']
+                        'source': source['name'],
+                        'pub_date': str(pub_date)
                     })
                     
-            print(f"{source['name']}: 抓取到 {len([n for n in news if n['source'] == source['name']])} 条AI相关新闻")
+            print(f"{source['name']}: 抓取到 {len([n for n in news if n['source'] == source['name']])} 条当天AI相关新闻")
             
         except Exception as e:
             print(f"{source['name']} RSS抓取失败: {e}")
@@ -415,6 +435,12 @@ def generate_html(news_list):
     if news_list:
         print(f"第一条新闻: {news_list[0]}")
     
+    # 获取当天日期（北京时间）
+    from datetime import datetime, timezone, timedelta
+    beijing_tz = timezone(timedelta(hours=8))
+    today = datetime.now(beijing_tz)
+    date_str = today.strftime('%Y-%m-%d')
+    
     # 分类新闻
     big_model_news = [news for news in news_list if '大模型' in news.get('category', '')]
     product_news = [news for news in news_list if '商业化' in news.get('category', '') or '产品' in news.get('category', '')]
@@ -455,6 +481,29 @@ def generate_html(news_list):
         </div>
         """
     
+    # 扫描目录中的历史日报文件
+    import os
+    historical_dates = []
+    for file in os.listdir('.'):
+        if file.startswith('AI日报_') and file.endswith('.html'):
+            try:
+                date_part = file.replace('AI日报_', '').replace('.html', '')
+                # 验证日期格式
+                import datetime
+                datetime.datetime.strptime(date_part, '%Y-%m-%d')
+                historical_dates.append(date_part)
+            except:
+                pass
+    
+    # 按日期降序排序
+    historical_dates.sort(reverse=True)
+    
+    # 生成日期标签HTML
+    date_tags_html = ''
+    for date in historical_dates:
+        active_class = ' active' if date == date_str else ''
+        date_tags_html += f'                <a href="AI日报_{date}.html" class="tag{active_class}">{date}</a>\n'
+    
     # 完整的HTML模板
     final_html = f"""
 <!DOCTYPE html>
@@ -462,7 +511,7 @@ def generate_html(news_list):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI日报 - {datetime.now().strftime('%Y年%m月%d日')}</title>
+    <title>AI日报 - {today.strftime('%Y年%m月%d日')}</title>
     <style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -524,10 +573,58 @@ def generate_html(news_list):
             border-top: 1px solid #ddd;
             padding-top: 20px;
         }}
+        .nav {{
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }}
+        .date-tags {{
+            text-align: left;
+        }}
+        .date-tags h3 {{
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }}
+        .tags-container {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }}
+        .tag {{
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 16px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }}
+        .tag:hover {{
+            background-color: #e0e0e0;
+        }}
+        .tag.active {{
+            background-color: #4169e1;
+            color: white;
+        }}
     </style>
 </head>
 <body>
-    <h1>AI日报 - {datetime.now().strftime('%Y年%m月%d日')}</h1>
+    <div class="nav">
+        <div class="date-tags">
+            <h3>选择日期</h3>
+            <div class="tags-container">
+                <a href="index.html" class="tag">首页</a>
+                {date_tags_html}
+            </div>
+        </div>
+    </div>
+    
+    <h1>AI日报 - {today.strftime('%Y年%m月%d日')}</h1>
     
     <!-- 大模型动态 -->
     <div class="category">
@@ -548,19 +645,174 @@ def generate_html(news_list):
     </div>
     
     <div class="footer">
-        <p>AI日报自动生成器 © {datetime.now().strftime('%Y')} | 版本 v{__version__} | 生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <p>AI日报自动生成器 © {today.strftime('%Y')} | 版本 v1.0.0 | 生成时间: {today.strftime('%Y-%m-%d %H:%M:%S')}</p>
     </div>
 </body>
 </html>
 """
-
-
+    
+    # 按日期命名文件
+    daily_file = f"AI日报_{date_str}.html"
     
     # 写入文件
-    with open("AI日报.html", "w", encoding="utf-8") as f:
+    with open(daily_file, "w", encoding="utf-8") as f:
         f.write(final_html)
     
-    print("HTML网页生成完成：AI日报.html")
+    print(f"HTML网页生成完成：{daily_file}")
+    
+    # 生成或更新主页面index.html
+    generate_index_page()
+    
+    return daily_file
+
+# 生成或更新主页面index.html
+def generate_index_page():
+    """生成主页面index.html"""
+    print("正在生成主页面index.html...")
+    
+    # 获取当天日期（北京时间）
+    from datetime import datetime, timezone, timedelta
+    beijing_tz = timezone(timedelta(hours=8))
+    today = datetime.now(beijing_tz)
+    date_str = today.strftime('%Y-%m-%d')
+    
+    # 扫描目录中的历史日报文件
+    import os
+    historical_dates = []
+    for file in os.listdir('.'):
+        if file.startswith('AI日报_') and file.endswith('.html'):
+            # 提取日期部分
+            try:
+                date_part = file.replace('AI日报_', '').replace('.html', '')
+                # 验证日期格式
+                datetime.strptime(date_part, '%Y-%m-%d')
+                historical_dates.append(date_part)
+            except:
+                pass
+    
+    # 按日期降序排序
+    historical_dates.sort(reverse=True)
+    
+    # 生成日期标签HTML
+    date_tags_html = ''
+    current_date = today.strftime('%Y-%m-%d')
+    for date in historical_dates:
+        active_class = ' active' if date == current_date else ''
+        date_tags_html += f'        <a href="AI日报_{date}.html" class="tag{active_class}">{date}</a>\n'
+    
+    # 主页面HTML模板
+    index_html = f"""
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI日报 - 首页</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+        }}
+        h1 {{
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }}
+        .nav {{
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }}
+        .date-tags {{
+            text-align: left;
+        }}
+        .date-tags h3 {{
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }}
+        .tags-container {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }}
+        .tag {{
+            display: inline-block;
+            padding: 6px 12px;
+            background-color: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 16px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }}
+        .tag:hover {{
+            background-color: #e0e0e0;
+        }}
+        .tag.active {{
+            background-color: #4169e1;
+            color: white;
+        }}
+        .welcome {{
+            text-align: center;
+            margin: 50px 0;
+            padding: 30px;
+            background-color: #f0f8ff;
+            border-radius: 10px;
+        }}
+        .welcome h2 {{
+            color: #4169e1;
+        }}
+        .footer {{
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }}
+    </style>
+</head>
+<body>
+    <h1>AI日报</h1>
+    
+    <div class="nav">
+        <div class="date-tags">
+            <h3>选择日期</h3>
+            <div class="tags-container">
+                <a href="index.html" class="tag active">首页</a>
+                {date_tags_html}
+            </div>
+        </div>
+    </div>
+    
+    <div class="welcome">
+        <h2>欢迎访问AI日报</h2>
+        <p>AI日报每天自动抓取和总结最新的AI相关新闻</p>
+        <p>最新日报：<a href="AI日报_{date_str}.html">{date_str}</a></p>
+    </div>
+    
+    <div class="footer">
+        <p>AI日报自动生成器 © {today.strftime('%Y')} | 版本 v1.0.0</p>
+    </div>
+</body>
+</html>
+"""
+    
+    # 写入文件
+    with open('index.html', 'w', encoding='utf-8') as f:
+        f.write(index_html)
+    
+    print("主页面生成完成：index.html")
 
 # ==================== 主函数 ====================
 
