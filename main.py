@@ -837,9 +837,9 @@ def main():
     
     # 3. 生成网页
     print("=== 开始生成网页 ===")
-    generate_html(summarized_news)
+    daily_file = generate_html(summarized_news)
     
-    print("\n任务完成！请查看生成的 'AI日报.html' 文件")
+    print(f"\n任务完成！请查看生成的 '{daily_file}' 文件")
 
 if __name__ == "__main__":
     main()
