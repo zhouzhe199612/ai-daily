@@ -519,23 +519,14 @@ def generate_html(news_list):
             color: #333;
             max-width: 800px;
             margin: 0 auto;
-            padding: 100px 20px 20px;
+            padding: 20px;
             background-color: #fff;
         }}
         h1 {{
-            position: fixed;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 800px;
-            background-color: #fff;
             text-align: center;
             border-bottom: 1px solid #ddd;
-            padding: 20px;
-            margin: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
         }}
         .category {{
             margin-top: 40px;
