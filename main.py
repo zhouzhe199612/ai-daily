@@ -645,7 +645,7 @@ def generate_html(news_list):
     </div>
     
     <div class="footer">
-        <p>AI日报自动生成器 © {today.strftime('%Y')} | 版本 v1.0.0 | 生成时间: {today.strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <p>AI日报自动生成器 © {today.strftime('%Y')} | 版本 v{__version__} | 生成时间: {today.strftime('%Y-%m-%d %H:%M:%S')}</p>
     </div>
 </body>
 </html>
@@ -801,7 +801,7 @@ def generate_index_page():
     </div>
     
     <div class="footer">
-        <p>AI日报自动生成器 © {today.strftime('%Y')} | 版本 v1.0.0</p>
+        <p>AI日报自动生成器 © {today.strftime('%Y')} | 版本 v{__version__}</p>
     </div>
 </body>
 </html>
