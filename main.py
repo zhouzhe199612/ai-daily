@@ -614,6 +614,8 @@ def generate_html(news_list):
     </style>
 </head>
 <body>
+    <h1>AI日报</h1>
+    
     <div class="nav">
         <div class="date-tags">
             <h3>选择日期</h3>
@@ -623,8 +625,6 @@ def generate_html(news_list):
             </div>
         </div>
     </div>
-    
-    <h1>AI日报</h1>
     
     <!-- 大模型动态 -->
     <div class="category">
