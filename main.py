@@ -695,10 +695,9 @@ def generate_index_page():
     
     # 生成日期标签HTML
     date_tags_html = ''
-    current_date = today.strftime('%Y-%m-%d')
     for date in historical_dates:
-        active_class = ' active' if date == current_date else ''
-        date_tags_html += f'        <a href="AI日报_{date}.html" class="tag{active_class}">{date}</a>\n'
+        # 在首页时，日期标签不应该有active状态
+        date_tags_html += f'        <a href="AI日报_{date}.html" class="tag">{date}</a>\n'
     
     # 主页面HTML模板
     index_html = f"""
